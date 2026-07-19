@@ -16,14 +16,7 @@ namespace TodoApp.Controllers
         public async Task<IActionResult> GetTasks()
         {
             var tasks = await context.Tasks.ToListAsync();
-
-            if (tasks == null)
-            {
-                tasks = [];
-                return Ok(tasks);
-            }
-
-            return Ok(tasks);
+            return Ok(tasks ?? []);
         }
 
         [HttpGet("{id}")]
@@ -31,7 +24,9 @@ namespace TodoApp.Controllers
         {
             var task = await context.Tasks.FindAsync(id);
             if (task == null)
-                return NotFound($"Task with ID {id} does not exist.");
+            {
+                return NotFound(new { message = $"Task with ID {id} does not exist." });
+            }
 
             return Ok(task);
         }
@@ -39,12 +34,6 @@ namespace TodoApp.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTask([FromBody] Task task)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (task.Title is null || task.Title == "")
-                return BadRequest("The task should has a Title");
-
             var newTask = new Task
             {
                 Title = task.Title,
@@ -62,17 +51,11 @@ namespace TodoApp.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, [FromBody] Task task)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var updatedTask = await context.Tasks.FindAsync(id);
             if (updatedTask is null)
-                return NotFound("Task does not exist!");
-
-            if (task.Title is null || task.Title == "")
-                return BadRequest("The task should has a Title");
+            {
+                return NotFound(new { message = $"Task with ID {id} does not exist." });
+            }
 
             updatedTask.Title = task.Title;
             updatedTask.UpdatedDate = DateTime.Now;
@@ -88,7 +71,9 @@ namespace TodoApp.Controllers
         {
             var task = await context.Tasks.FindAsync(id);
             if (task == null)
-                return NotFound($"Task with ID {id} does not exist.");
+            {
+                return NotFound(new { message = $"Task with ID {id} does not exist." });
+            }
 
             context.Tasks.Remove(task);
             await context.SaveChangesAsync();
