@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="TodoApp/TodoApp.csproj" Id="d1381d64-6269-4864-8635-7fb9fc230b68" />
+</Solution>
