@@ -13,16 +13,16 @@ namespace TodoApp.Controllers
     public class TasksController(AppDbContext context) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetTasks()
+        public async Task<IActionResult> GetTasks(CancellationToken cancellationToken)
         {
-            var tasks = await context.Tasks.ToListAsync();
+            var tasks = await context.Tasks.ToListAsync(cancellationToken);
             return Ok(tasks ?? []);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTask(int id)
+        public async Task<IActionResult> GetTask(int id, CancellationToken cancellationToken)
         {
-            var task = await context.Tasks.FindAsync(id);
+            var task = await context.Tasks.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (task == null)
             {
                 return NotFound(new { message = $"Task with ID {id} does not exist." });
@@ -32,7 +32,7 @@ namespace TodoApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddTask([FromBody] Task task)
+        public async Task<IActionResult> AddTask([FromBody] Task task, CancellationToken cancellationToken)
         {
             var newTask = new Task
             {
@@ -42,16 +42,16 @@ namespace TodoApp.Controllers
             };
             newTask.UpdatedDate = newTask.CreatedDate;
 
-            await context.Tasks.AddAsync(newTask);
-            await context.SaveChangesAsync();
+            await context.Tasks.AddAsync(newTask, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             return Ok(newTask);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask(int id, [FromBody] Task task)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] Task task, CancellationToken cancellationToken)
         {
-            var updatedTask = await context.Tasks.FindAsync(id);
+            var updatedTask = await context.Tasks.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (updatedTask is null)
             {
                 return NotFound(new { message = $"Task with ID {id} does not exist." });
@@ -61,22 +61,22 @@ namespace TodoApp.Controllers
             updatedTask.UpdatedDate = DateTime.Now;
             updatedTask.isCompleted = task.isCompleted;
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
 
             return Ok(updatedTask);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(int id)
+        public async Task<IActionResult> DeleteTask(int id, CancellationToken cancellationToken)
         {
-            var task = await context.Tasks.FindAsync(id);
+            var task = await context.Tasks.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (task == null)
             {
                 return NotFound(new { message = $"Task with ID {id} does not exist." });
             }
 
             context.Tasks.Remove(task);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
 
             return NoContent();
         }
