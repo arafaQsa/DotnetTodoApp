@@ -13,9 +13,16 @@ namespace TodoApp.Controllers
     public class TasksController(AppDbContext context) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetTasks(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetTasks([FromQuery] string? search, CancellationToken cancellationToken)
         {
-            var tasks = await context.Tasks.ToListAsync(cancellationToken);
+            var query = context.Tasks.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(t => t.Title.ToLower().Contains(search.ToLower()));
+            }
+
+            var tasks = await query.ToListAsync(cancellationToken);
             return Ok(tasks ?? []);
         }
 
